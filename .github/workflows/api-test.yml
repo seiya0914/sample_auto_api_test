@@ -2,22 +2,25 @@ name: API Test
 
 on:
   pull_request:
-    branches: [ main ]
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - master
     paths:
       - '**.py'
       - 'openapi.yaml'
       - 'requirements.txt'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   test:
     runs-on: ubuntu-latest
     
-    services:
-      api:
-        image: python:3.11
-        ports:
-          - 8000:8000
-
     steps:
       - uses: actions/checkout@v4
 
@@ -46,16 +49,25 @@ jobs:
           cache: 'npm'
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: |
+          npm install -g newman
+          npm ci
+
+      - name: Create newman directory
+        run: mkdir -p newman
 
       - name: Validate OpenAPI specification
         run: npm run validate
 
-      - name: Generate Postman collection
-        run: npm run postman:convert
+      - name: Convert OpenAPI to Postman Collection
+        run: |
+          mkdir -p newman
+          npm run postman:convert
 
       - name: Run API tests
-        run: npm run test:api
+        run: |
+          ls -la newman/
+          npm run test:api
 
       - name: Upload test results
         if: always()
