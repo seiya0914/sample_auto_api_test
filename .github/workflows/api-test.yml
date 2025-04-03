@@ -10,12 +10,26 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  statuses: write
 
 jobs:
   test:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Set initial status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'pending',
+              description: 'APIテストを実行中',
+              context: 'API Test'
+            });
+
       - uses: actions/checkout@v4
 
       - name: Set up Python
@@ -145,6 +159,17 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: summary
+            });
+
+            // テスト結果に基づいてステータスを更新
+            const success = !process.env.TEST_STATUS?.includes('失敗');
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: success ? 'success' : 'failure',
+              description: success ? 'APIテストが成功しました' : 'APIテストが失敗しました',
+              context: 'API Test'
             });
         env:
           VALIDATE_STATUS: ${{ steps.validate-openapi.outputs.status }}
