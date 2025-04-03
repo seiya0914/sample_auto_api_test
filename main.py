@@ -14,11 +14,11 @@ class Item(BaseModel):
 
 # インメモリデータストア
 items_db = {
-    1: Item(id=1, name="ノートパソコン", description="高性能ノートPC", price=150000.0),
-    2: Item(id=2, name="スマートフォン", description="最新モデル", price=98000.0),
-    3: Item(id=3, name="ワイヤレスイヤホン", description="ノイズキャンセリング機能付き", price=25000.0),
-    4: Item(id=4, name="スマートウォッチ", description="健康管理機能搭載", price=35000.0),
-    5: Item(id=5, name="タブレット", description="10インチディスプレイ", price=45000.0)
+    1: Item(id=1, name="ノートパソコン", description="高性能ノートPC"),
+    2: Item(id=2, name="スマートフォン", description="最新モデル"),
+    3: Item(id=3, name="ワイヤレスイヤホン", description="ノイズキャンセリング機能付き"),
+    4: Item(id=4, name="スマートウォッチ", description="健康管理機能搭載"),
+    5: Item(id=5, name="タブレット", description="10インチディスプレイ")
 }
 
 @app.get("/")
