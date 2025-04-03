@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Optional
 import uvicorn
@@ -12,6 +12,11 @@ class Item(BaseModel):
     description: Optional[str] = None
     price: float
 
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+
 # インメモリデータストア
 items_db = {
     1: Item(id=1, name="ノートパソコン", description="高性能ノートPC", price=150000.0),
@@ -20,6 +25,12 @@ items_db = {
     4: Item(id=4, name="スマートウォッチ", description="健康管理機能搭載", price=35000.0),
     5: Item(id=5, name="タブレット", description="10インチディスプレイ", price=45000.0)
 }
+
+users = [
+    User(id=1, name="John Doe", email="john@example.com"),
+    User(id=2, name="Jane Smith", email="jane@example.com"),
+    User(id=3, name="John Smith", email="john.smith@example.com"),
+]
 
 @app.get("/")
 def read_root():
@@ -57,6 +68,25 @@ def delete_item(item_id: int):
         raise HTTPException(status_code=404, detail="Item not found")
     del items_db[item_id]
     return {"message": "Item deleted successfully"}
+
+@app.get("/api/users", response_model=List[User])
+def get_users():
+    return users
+
+@app.get("/api/users/{user_id}", response_model=User)
+def get_user(user_id: int):
+    user = next((user for user in users if user.id == user_id), None)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@app.get("/api/users/search", response_model=List[User])
+def search_users(name: str = Query(..., description="The name to search for")):
+    if not name:
+        raise HTTPException(status_code=400, detail="Name parameter is required")
+    
+    matched_users = [user for user in users if name.lower() in user.name.lower()]
+    return matched_users
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

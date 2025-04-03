@@ -138,6 +138,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/users:
+    get:
+      summary: Get all users
+      operationId: getUsers
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /api/users/{id}:
+    get:
+      summary: Get user by ID
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The user ID
+          example: 1
+      responses:
+        '200':
+          description: A single user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+  /api/users/search:
+    get:
+      summary: Search users by name
+      operationId: searchUsers
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The name to search for
+          example: "John"
+      responses:
+        '200':
+          description: A list of users matching the search criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid search parameters
+
 components:
   schemas:
     Item:
@@ -173,3 +233,17 @@ components:
           type: string
           description: エラーメッセージ
           example: "Item not found"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
