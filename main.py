@@ -11,14 +11,15 @@ class Item(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
+    type: str
 
 # インメモリデータストア
 items_db = {
-    1: Item(id=1, name="ノートパソコン", description="高性能ノートPC"),
-    2: Item(id=2, name="スマートフォン", description="最新モデル"),
-    3: Item(id=3, name="ワイヤレスイヤホン", description="ノイズキャンセリング機能付き"),
-    4: Item(id=4, name="スマートウォッチ", description="健康管理機能搭載"),
-    5: Item(id=5, name="タブレット", description="10インチディスプレイ")
+    1: Item(id=1, name="ノートパソコン", description="高性能ノートPC", price=100000.0, type="notebook"),
+    2: Item(id=2, name="スマートフォン", description="最新モデル", price=80000.0, type="smartphone"),
+    3: Item(id=3, name="ワイヤレスイヤホン", description="ノイズキャンセリング機能付き", price=20000.0, type="wireless-headphones"),
+    4: Item(id=4, name="スマートウォッチ", description="健康管理機能搭載", price=30000.0, type="smartwatch"),
+    5: Item(id=5, name="タブレット", description="10インチディスプレイ", price=40000.0, type="tablet")
 }
 
 @app.get("/")
