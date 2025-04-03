@@ -47,7 +47,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Item'
+              # 意図的なエラー: 必須フィールドの型を間違える
+              type: object
+              required: ["name", "price"]
+              properties:
+                name:
+                  type: integer  # 本来はstring
+                  description: 商品名
+                price:
+                  type: string  # 本来はnumber
+                  description: 価格
+                description:
+                  type: boolean  # 本来はstring
+                  description: 商品説明
+
       responses:
         '200':
           description: 作成成功

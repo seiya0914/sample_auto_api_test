@@ -37,26 +37,28 @@ def read_item(item_id: int):
 
 @app.post("/items/", response_model=Item)
 def create_item(item: Item):
+    # 意図的なエラー1: 新規作成時のステータスコードを201ではなく200で返す
     if item.id in items_db:
         raise HTTPException(status_code=400, detail="Item already exists")
     items_db[item.id] = item
-    return item
+    return item  # 201を返すべきところを200で返している
 
 @app.put("/items/{item_id}", response_model=Item)
 def update_item(item_id: int, item: Item):
-    if item_id != item.id:
-        raise HTTPException(status_code=400, detail="ID mismatch")
+    # 意図的なエラー2: IDの不一致チェックを省略
     if item_id not in items_db:
         raise HTTPException(status_code=404, detail="Item not found")
+    # item_idとitem.idの一致チェックを省略（OpenAPI仕様違反）
     items_db[item_id] = item
     return item
 
 @app.delete("/items/{item_id}")
 def delete_item(item_id: int):
+    # 意図的なエラー3: 404エラーを返すべき場合に500エラーを返す
     if item_id not in items_db:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=500, detail="Internal server error")  # 本来は404を返すべき
     del items_db[item_id]
-    return {"message": "Item deleted successfully"}
+    return {"status": "success"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
