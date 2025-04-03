@@ -57,17 +57,39 @@ jobs:
         run: mkdir -p newman
 
       - name: Validate OpenAPI specification
-        run: npm run validate
+        id: validate-openapi
+        continue-on-error: true
+        run: |
+          if npm run validate; then
+            echo "status= OpenAPI仕様の検証が成功しました" >> $GITHUB_OUTPUT
+          else
+            echo "status= OpenAPI仕様の検証が失敗しました" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       - name: Convert OpenAPI to Postman Collection
+        id: convert-postman
+        continue-on-error: true
         run: |
           mkdir -p newman
-          npm run postman:convert
+          if npm run postman:convert; then
+            echo "status= PostmanコレクションへのOpenAPI変換が成功しました" >> $GITHUB_OUTPUT
+          else
+            echo "status= PostmanコレクションへのOpenAPI変換が失敗しました" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       - name: Run API tests
+        id: run-tests
+        continue-on-error: true
         run: |
           ls -la newman/
-          npm run test:api
+          if npm run test:api; then
+            echo "status= APIテストが成功しました" >> $GITHUB_OUTPUT
+          else
+            echo "status= APIテストが失敗しました" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       - name: Upload test results
         if: always()
@@ -75,3 +97,42 @@ jobs:
         with:
           name: newman-test-results
           path: newman/
+
+      - name: Create test summary
+        if: always()
+        run: |
+          echo "### APIテスト実行結果 :rocket:" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| テスト | 結果 |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| OpenAPI仕様の検証 | ${{ steps.validate-openapi.outputs.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Postmanコレクションへの変換 | ${{ steps.convert-postman.outputs.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| APIテストの実行 | ${{ steps.run-tests.outputs.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "詳細なテスト結果は[Artifacts](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})でご確認いただけます。" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const summary = `### APIテスト実行結果 :rocket:
+
+            | テスト | 結果 |
+            | --- | --- |
+            | OpenAPI仕様の検証 | ${process.env.VALIDATE_STATUS} |
+            | Postmanコレクションへの変換 | ${process.env.CONVERT_STATUS} |
+            | APIテストの実行 | ${process.env.TEST_STATUS} |
+
+            詳細なテスト結果は[Artifacts](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})でご確認いただけます。`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+        env:
+          VALIDATE_STATUS: ${{ steps.validate-openapi.outputs.status }}
+          CONVERT_STATUS: ${{ steps.convert-postman.outputs.status }}
+          TEST_STATUS: ${{ steps.run-tests.outputs.status }}
