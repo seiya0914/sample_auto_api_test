@@ -62,10 +62,8 @@ jobs:
         run: |
           if npm run validate; then
             echo "status= OpenAPI仕様の検証が成功しました" >> $GITHUB_OUTPUT
-            echo "details=OpenAPI仕様が正しく定義されています。" >> $GITHUB_OUTPUT
           else
             echo "status= OpenAPI仕様の検証が失敗しました" >> $GITHUB_OUTPUT
-            echo "details=OpenAPI仕様に問題が見つかりました。エラーメッセージを確認してください。" >> $GITHUB_OUTPUT
             exit 1
           fi
 
@@ -76,10 +74,8 @@ jobs:
           mkdir -p newman
           if npm run postman:convert; then
             echo "status= PostmanコレクションへのOpenAPI変換が成功しました" >> $GITHUB_OUTPUT
-            echo "details=OpenAPI仕様からPostmanコレクションが正常に生成されました。" >> $GITHUB_OUTPUT
           else
             echo "status= PostmanコレクションへのOpenAPI変換が失敗しました" >> $GITHUB_OUTPUT
-            echo "details=OpenAPI仕様からPostmanコレクションの生成に失敗しました。エラーメッセージを確認してください。" >> $GITHUB_OUTPUT
             exit 1
           fi
 
@@ -88,23 +84,16 @@ jobs:
         continue-on-error: true
         run: |
           ls -la newman/
-          if npm run test:api 2>&1 | tee newman/test.log; then
-            total=$(grep -c "" newman/test.log || echo "0")
-            failed=$(grep -c "" newman/test.log || echo "0")
+          if npm run test:api > newman/test-output.txt 2>&1; then
             echo "status= APIテストが成功しました" >> $GITHUB_OUTPUT
-            echo "details=全テストケースが正常に実行されました。" >> $GITHUB_OUTPUT
-            echo "total=$total" >> $GITHUB_OUTPUT
-            echo "failed=0" >> $GITHUB_OUTPUT
-            echo "passed=$total" >> $GITHUB_OUTPUT
+            echo "output<<EOF" >> $GITHUB_OUTPUT
+            cat newman/test-output.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           else
-            total=$(grep -c "" newman/test.log || echo "0")
-            failed=$(grep -c "" newman/test.log || echo "0")
-            passed=$((total - failed))
             echo "status= APIテストが失敗しました" >> $GITHUB_OUTPUT
-            echo "details=一部のテストケースが失敗しました。詳細は実行ログを確認してください。" >> $GITHUB_OUTPUT
-            echo "total=$total" >> $GITHUB_OUTPUT
-            echo "failed=$failed" >> $GITHUB_OUTPUT
-            echo "passed=$passed" >> $GITHUB_OUTPUT
+            echo "output<<EOF" >> $GITHUB_OUTPUT
+            cat newman/test-output.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
             exit 1
           fi
 
@@ -120,42 +109,43 @@ jobs:
         run: |
           echo "### APIテスト実行結果 :rocket:" > $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| テスト | 結果 | 詳細 |" >> $GITHUB_STEP_SUMMARY
-          echo "| --- | --- | --- |" >> $GITHUB_STEP_SUMMARY
-          echo "| OpenAPI仕様の検証 | ${{ steps.validate-openapi.outputs.status }} | ${{ steps.validate-openapi.outputs.details }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Postmanコレクションへの変換 | ${{ steps.convert-postman.outputs.status }} | ${{ steps.convert-postman.outputs.details }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| APIテストの実行 | ${{ steps.run-tests.outputs.status }} | ${{ steps.run-tests.outputs.details }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| テスト | 結果 |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| OpenAPI仕様の検証 | ${{ steps.validate-openapi.outputs.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Postmanコレクションへの変換 | ${{ steps.convert-postman.outputs.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| APIテストの実行 | ${{ steps.run-tests.outputs.status }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.run-tests.outputs.total }}" != "" ]; then
-            echo "#### テスト実行サマリー " >> $GITHUB_STEP_SUMMARY
-            echo "- 総テスト数: ${{ steps.run-tests.outputs.total }}" >> $GITHUB_STEP_SUMMARY
-            echo "- 成功: ${{ steps.run-tests.outputs.passed }} " >> $GITHUB_STEP_SUMMARY
-            echo "- 失敗: ${{ steps.run-tests.outputs.failed }} " >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.run-tests.outputs.output }}" ]; then
+            echo "#### Newmanテスト実行結果" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.run-tests.outputs.output }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "詳細なテスト結果は[Artifacts](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})でご確認いただけます。" >> $GITHUB_STEP_SUMMARY
 
       - name: Comment PR
         if: always()
         uses: actions/github-script@v7
         with:
           script: |
-            const testStats = process.env.TEST_TOTAL ? `
-            #### テスト実行サマリー 
-            - 総テスト数: ${process.env.TEST_TOTAL}
-            - 成功: ${process.env.TEST_PASSED} 
-            - 失敗: ${process.env.TEST_FAILED} 
+            const newmanOutput = process.env.NEWMAN_OUTPUT ? `
+            <details>
+            <summary>Newmanテスト実行結果 🔍</summary>
+
+            \`\`\`
+            ${process.env.NEWMAN_OUTPUT}
+            \`\`\`
+            </details>
             ` : '';
 
             const summary = `### APIテスト実行結果 :rocket:
 
-            | テスト | 結果 | 詳細 |
-            | --- | --- | --- |
-            | OpenAPI仕様の検証 | ${process.env.VALIDATE_STATUS} | ${process.env.VALIDATE_DETAILS} |
-            | Postmanコレクションへの変換 | ${process.env.CONVERT_STATUS} | ${process.env.CONVERT_DETAILS} |
-            | APIテストの実行 | ${process.env.TEST_STATUS} | ${process.env.TEST_DETAILS} |
+            | テスト | 結果 |
+            | --- | --- |
+            | OpenAPI仕様の検証 | ${process.env.VALIDATE_STATUS} |
+            | Postmanコレクションへの変換 | ${process.env.CONVERT_STATUS} |
+            | APIテストの実行 | ${process.env.TEST_STATUS} |
 
-            ${testStats}
+            ${newmanOutput}
 
             詳細なテスト結果は[Artifacts](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})でご確認いただけます。`;
 
@@ -167,11 +157,6 @@ jobs:
             });
         env:
           VALIDATE_STATUS: ${{ steps.validate-openapi.outputs.status }}
-          VALIDATE_DETAILS: ${{ steps.validate-openapi.outputs.details }}
           CONVERT_STATUS: ${{ steps.convert-postman.outputs.status }}
-          CONVERT_DETAILS: ${{ steps.convert-postman.outputs.details }}
           TEST_STATUS: ${{ steps.run-tests.outputs.status }}
-          TEST_DETAILS: ${{ steps.run-tests.outputs.details }}
-          TEST_TOTAL: ${{ steps.run-tests.outputs.total }}
-          TEST_PASSED: ${{ steps.run-tests.outputs.passed }}
-          TEST_FAILED: ${{ steps.run-tests.outputs.failed }}
+          NEWMAN_OUTPUT: ${{ steps.run-tests.outputs.output }}
