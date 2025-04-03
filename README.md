@@ -2,6 +2,114 @@
 
 このプロジェクトは、FastAPIを使用したREST APIのテスト自動化のサンプルです。GitHub Actionsを使用して、PRごとにAPIテストを自動実行する方法を示しています。
 
+## プロジェクト概要図
+
+### CI/CDパイプライン
+
+```mermaid
+flowchart LR
+    classDef phase fill:#e6f3ff,stroke:#3182bd
+    classDef tool fill:#fff7dc,stroke:#fd8d3c
+    classDef artifact fill:#e5f5e0,stroke:#31a354
+
+    subgraph 開発
+        A[開発者]:::phase --> B[コード変更]:::artifact
+        B --> C[PR作成]:::phase
+    end
+
+    subgraph 自動テスト
+        D[GitHub Actions]:::tool --> E[OpenAPI検証]:::phase
+        E --> F[テストケース生成]:::phase
+        F --> G[APIテスト実行]:::phase
+    end
+
+    subgraph レポート
+        H[テスト結果]:::artifact --> I[PRコメント]:::phase
+        I --> J[承認/却下]:::phase
+    end
+
+    C --> D
+    G --> H
+```
+
+### テスト実行フロー
+
+```mermaid
+sequenceDiagram
+    participant Dev as 開発者
+    participant PR as プルリクエスト
+    participant CI as GitHub Actions
+    participant API as FastAPI
+    participant Test as Newman
+
+    autonumber
+    Dev->>PR: コード変更を提出
+    PR->>CI: テストワークフロー起動
+    
+    Note over CI: 準備フェーズ
+    CI->>CI: 環境セットアップ
+    CI->>CI: 依存関係インストール
+    
+    Note over CI: 検証フェーズ
+    CI->>CI: OpenAPI仕様チェック
+    CI->>CI: テストケース生成
+    
+    Note over CI,Test: テストフェーズ
+    CI->>API: サーバー起動
+    CI->>Test: テスト実行
+    Test->>API: APIリクエスト
+    API-->>Test: レスポンス
+    Test->>CI: テスト結果
+    
+    Note over CI,PR: 完了フェーズ
+    CI->>PR: 結果報告
+    PR->>Dev: 通知
+```
+
+### ディレクトリ構成
+
+```mermaid
+graph TD
+    classDef file fill:#fff7dc,stroke:#fd8d3c
+    classDef dir fill:#e6f3ff,stroke:#3182bd
+
+    A[プロジェクトルート]:::dir --> B[.github]:::dir
+    B --> C[workflows]:::dir
+    C --> D[api-test.yml]:::file
+    
+    A --> E[main.py]:::file
+    A --> F[openapi.yaml]:::file
+    A --> G[requirements.txt]:::file
+    A --> H[package.json]:::file
+    A --> I[README.md]:::file
+```
+
+### コンポーネント説明
+
+1. **開発フェーズ**
+   - 開発者がコードを変更
+   - OpenAPI仕様を更新
+   - プルリクエストを作成
+
+2. **自動テストフェーズ**
+   - GitHub Actionsによる自動実行
+   - OpenAPI仕様の検証
+   - テストケースの自動生成
+   - APIテストの実行
+
+3. **レポートフェーズ**
+   - テスト結果の集計
+   - PRへの自動コメント
+   - 承認/却下の判断材料として活用
+
+### 主要ファイルの役割
+
+- `main.py`: FastAPIアプリケーション本体
+- `openapi.yaml`: API仕様定義
+- `api-test.yml`: GitHub Actionsワークフロー
+- `package.json`: テストツール設定
+- `requirements.txt`: Python依存関係
+
 ## 機能
 
 - FastAPIによるREST API実装
