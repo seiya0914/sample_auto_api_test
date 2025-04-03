@@ -25,24 +25,24 @@ items_db = {
 def read_root():
     return {"message": "Welcome to Sample API Server"}
 
-@app.get("/api/items/", response_model=List[Item])
+@app.get("/items/", response_model=List[Item])
 def read_items():
     return list(items_db.values())
 
-@app.get("/api/items/{item_id}", response_model=Item)
+@app.get("/items/{item_id}", response_model=Item)
 def read_item(item_id: int):
     if item_id not in items_db:
         raise HTTPException(status_code=404, detail="Item not found")
     return items_db[item_id]
 
-@app.post("/api/items/", response_model=Item)
+@app.post("/items/", response_model=Item)
 def create_item(item: Item):
     if item.id in items_db:
         raise HTTPException(status_code=400, detail="Item already exists")
     items_db[item.id] = item
     return item
 
-@app.put("/api/items/{item_id}", response_model=Item)
+@app.put("/items/{item_id}", response_model=Item)
 def update_item(item_id: int, item: Item):
     if item_id != item.id:
         raise HTTPException(status_code=400, detail="ID mismatch")
@@ -51,7 +51,7 @@ def update_item(item_id: int, item: Item):
     items_db[item_id] = item
     return item
 
-@app.delete("/api/items/{item_id}")
+@app.delete("/items/{item_id}")
 def delete_item(item_id: int):
     if item_id not in items_db:
         raise HTTPException(status_code=404, detail="Item not found")
