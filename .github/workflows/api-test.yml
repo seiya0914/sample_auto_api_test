@@ -58,7 +58,6 @@ jobs:
 
       - name: Validate OpenAPI specification
         id: validate-openapi
-        continue-on-error: true
         run: |
           if npm run validate; then
             echo "status= OpenAPI仕様の検証が成功しました" >> $GITHUB_OUTPUT
@@ -69,7 +68,6 @@ jobs:
 
       - name: Convert OpenAPI to Postman Collection
         id: convert-postman
-        continue-on-error: true
         run: |
           mkdir -p newman
           if npm run postman:convert; then
@@ -81,7 +79,6 @@ jobs:
 
       - name: Run API tests
         id: run-tests
-        continue-on-error: true
         run: |
           ls -la newman/
           if npm run test:api > newman/test-output.txt 2>&1; then

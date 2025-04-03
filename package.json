@@ -4,8 +4,8 @@
   "description": "API Test Automation Sample",
   "scripts": {
     "validate": "swagger-cli validate openapi.yaml",
-    "postman:convert": "openapi2postmanv2 -s openapi.yaml -o newman/collection.json",
-    "test:api": "newman run newman/collection.json -r cli,htmlextra --reporter-htmlextra-export newman/report.html"
+    "postman:convert": "openapi2postmanv2 -s openapi.yaml -o newman/collection.json --test-status-code=true --test-response-time=false --test-headers=false --test-content=true",
+    "test:api": "newman run newman/collection.json -r cli,htmlextra --reporter-htmlextra-export newman/report.html --bail"
   },
   "dependencies": {
     "openapi-to-postmanv2": "^3.2.1",
