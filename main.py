@@ -26,12 +26,12 @@ def read_root():
     # 意図的なエラー: レスポンスの形式が異なる
     return "Welcome to Sample API Server"  # オブジェクトではなく文字列を返す
 
-@app.get("/items/", response_model=List[Item])
+@app.get("/api/items/", response_model=List[Item])
 def read_items():
     # 意図的なエラー: レスポンスの形式が異なる
     return [{"item": item} for item in items_db.values()]  # 余分なitemキーを追加
 
-@app.get("/items/{item_id}", response_model=Item)
+@app.get("/api/items/{item_id}", response_model=Item)
 def read_item(item_id: int):
     if item_id not in items_db:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -44,15 +44,7 @@ def read_item(item_id: int):
         "price": str(item.price)  # 数値を文字列に変換
     }
 
-@app.post("/items/", response_model=Item)
-def create_item(item: Item):
-    # 意図的なエラー1: 新規作成時のステータスコードを201ではなく200で返す
-    if item.id in items_db:
-        raise HTTPException(status_code=400, detail="Item already exists")
-    items_db[item.id] = item
-    return item  # 201を返すべきところを200で返している
-
-@app.put("/items/{item_id}", response_model=Item)
+@app.put("/api/items/{item_id}", response_model=Item)
 def update_item(item_id: int, item: Item):
     # 意図的なエラー2: IDの不一致チェックを省略
     if item_id not in items_db:
@@ -67,7 +59,7 @@ def update_item(item_id: int, item: Item):
         "price": str(item.price)  # 数値を文字列に変換
     }
 
-@app.delete("/items/{item_id}")
+@app.delete("/api/items/{item_id}")
 def delete_item(item_id: int):
     # 意図的なエラー3: 404エラーを返すべき場合に500エラーを返す
     if item_id not in items_db:
@@ -77,4 +69,4 @@ def delete_item(item_id: int):
     return {"message": 200}  # 文字列ではなく数値を返す
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
