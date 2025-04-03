@@ -23,17 +23,26 @@ items_db = {
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Sample API Server"}
+    # 意図的なエラー: レスポンスの形式が異なる
+    return "Welcome to Sample API Server"  # オブジェクトではなく文字列を返す
 
 @app.get("/items/", response_model=List[Item])
 def read_items():
-    return list(items_db.values())
+    # 意図的なエラー: レスポンスの形式が異なる
+    return [{"item": item} for item in items_db.values()]  # 余分なitemキーを追加
 
 @app.get("/items/{item_id}", response_model=Item)
 def read_item(item_id: int):
     if item_id not in items_db:
         raise HTTPException(status_code=404, detail="Item not found")
-    return items_db[item_id]
+    # 意図的なエラー: レスポンスの形式が異なる
+    item = items_db[item_id]
+    return {
+        "id": str(item.id),  # 数値を文字列に変換
+        "name": item.name,
+        "description": item.description,
+        "price": str(item.price)  # 数値を文字列に変換
+    }
 
 @app.post("/items/", response_model=Item)
 def create_item(item: Item):
@@ -50,7 +59,13 @@ def update_item(item_id: int, item: Item):
         raise HTTPException(status_code=404, detail="Item not found")
     # item_idとitem.idの一致チェックを省略（OpenAPI仕様違反）
     items_db[item_id] = item
-    return item
+    # 意図的なエラー: レスポンスの形式が異なる
+    return {
+        "id": str(item.id),  # 数値を文字列に変換
+        "name": item.name,
+        "description": item.description,
+        "price": str(item.price)  # 数値を文字列に変換
+    }
 
 @app.delete("/items/{item_id}")
 def delete_item(item_id: int):
@@ -58,7 +73,8 @@ def delete_item(item_id: int):
     if item_id not in items_db:
         raise HTTPException(status_code=500, detail="Internal server error")  # 本来は404を返すべき
     del items_db[item_id]
-    return {"status": "success"}
+    # 意図的なエラー: レスポンスの形式が異なる
+    return {"message": 200}  # 文字列ではなく数値を返す
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -47,18 +47,18 @@ paths:
         content:
           application/json:
             schema:
-              # 意図的なエラー: 必須フィールドの型を間違える
               type: object
               required: ["name", "price"]
               properties:
                 name:
-                  type: integer  # 本来はstring
+                  type: string
                   description: 商品名
                 price:
-                  type: string  # 本来はnumber
+                  type: number
+                  format: float
                   description: 価格
                 description:
-                  type: boolean  # 本来はstring
+                  type: string
                   description: 商品説明
 
       responses:
@@ -178,9 +178,6 @@ components:
           format: float
           description: アイテムの価格
           example: 150000.0
-        invalid_field:
-          type: invalid_type
-          description: 無効なフィールド型
 
     Error:
       type: object
