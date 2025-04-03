@@ -5,7 +5,7 @@
   "scripts": {
     "validate": "swagger-cli validate openapi.yaml",
     "postman:convert": "openapi2postmanv2 -s openapi.yaml -o newman/collection.json -O requestParametersResolution=Example -O responseParametersResolution=Example",
-    "test:api": "newman run newman/collection.json -r cli,htmlextra --reporter-htmlextra-export newman/report.html --bail"
+    "test:api": "newman run newman/collection.json -r cli,htmlextra --reporter-htmlextra-export newman/report.html --bail newman-reporter-cli"
   },
   "dependencies": {
     "openapi-to-postmanv2": "^3.2.1",
