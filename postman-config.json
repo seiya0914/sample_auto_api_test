@@ -1,0 +1,6 @@
+{
+  "requestParametersResolution": "Example",
+  "responseParametersResolution": "Example",
+  "optimizeConversion": false,
+  "stackLimit": 50
+}
