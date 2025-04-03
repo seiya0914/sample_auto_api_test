@@ -178,7 +178,10 @@ components:
           format: float
           description: アイテムの価格
           example: 150000.0
-    
+        invalid_field:
+          type: invalid_type
+          description: 無効なフィールド型
+
     Error:
       type: object
       properties:
