@@ -1,0 +1,175 @@
+openapi: 3.0.0
+info:
+  title: Sample API Server
+  version: 1.0.0
+  description: FastAPIを使用したサンプルAPIサーバー
+
+servers:
+  - url: http://localhost:8000
+    description: ローカル開発サーバー
+
+paths:
+  /:
+    get:
+      summary: ウェルカムメッセージを取得
+      description: APIサーバーのウェルカムメッセージを返却します
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Welcome to Sample API Server"
+
+  /items/:
+    get:
+      summary: 全アイテムの取得
+      description: 登録されている全てのアイテムを取得します
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+    
+    post:
+      summary: 新規アイテムの作成
+      description: 新しいアイテムを作成します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+      responses:
+        '200':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          description: 既に存在するIDが指定された場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /items/{item_id}:
+    parameters:
+      - name: item_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: アイテムのID
+    
+    get:
+      summary: 特定のアイテムの取得
+      description: 指定されたIDのアイテムを取得します
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '404':
+          description: 指定されたIDのアイテムが見つからない場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      summary: アイテムの更新
+      description: 指定されたIDのアイテムを更新します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          description: リクエストボディのIDとパスパラメータのIDが一致しない場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 指定されたIDのアイテムが見つからない場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      summary: アイテムの削除
+      description: 指定されたIDのアイテムを削除します
+      responses:
+        '200':
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Item deleted successfully"
+        '404':
+          description: 指定されたIDのアイテムが見つからない場合
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Item:
+      type: object
+      required:
+        - id
+        - name
+        - price
+      properties:
+        id:
+          type: integer
+          description: アイテムの一意の識別子
+          example: 1
+        name:
+          type: string
+          description: アイテムの名前
+          example: "ノートパソコン"
+        description:
+          type: string
+          nullable: true
+          description: アイテムの説明（オプション）
+          example: "高性能ノートPC"
+        price:
+          type: number
+          format: float
+          description: アイテムの価格
+          example: 150000.0
+    
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: エラーメッセージ
+          example: "Item not found"
