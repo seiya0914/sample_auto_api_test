@@ -7,11 +7,7 @@ on:
       - main
       - master
     paths:
-      - '**.py'
-      - 'openapi.yaml'
-      - 'requirements.txt'
-      - 'package.json'
-      - 'package-lock.json'
+      - 'main.py'
 
 permissions:
   contents: read
