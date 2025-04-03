@@ -1,21 +1,18 @@
 {
-  "name": "cascadeprojects",
+  "name": "api-test-sample",
   "version": "1.0.0",
-  "description": "FastAPIを使用したサンプルAPIサーバーです。",
-  "main": "index.js",
+  "description": "API Test Automation Sample",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "validate": "swagger-cli validate openapi.yaml",
-    "postman:convert": "openapi2postmanv2 -s openapi.yaml -o postman_collection.json",
-    "test:api": "newman run postman_collection.json -e postman_environment.json --reporters cli,junit --reporter-junit-export newman/junit-report.xml"
+    "postman:convert": "openapi2postmanv2 -s openapi.yaml -o newman/collection.json",
+    "test:api": "newman run newman/collection.json -r cli,htmlextra --reporter-htmlextra-export newman/report.html"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "dependencies": {
+    "openapi-to-postmanv2": "^3.2.1",
+    "swagger-cli": "^4.0.4"
+  },
   "devDependencies": {
-    "@apidevtools/swagger-cli": "^4.0.4",
-    "newman": "^6.1.1",
-    "newman-reporter-htmlextra": "^1.22.11",
-    "openapi-to-postmanv2": "^3.0.2"
+    "newman": "^6.0.0",
+    "newman-reporter-htmlextra": "^1.23.1"
   }
 }
